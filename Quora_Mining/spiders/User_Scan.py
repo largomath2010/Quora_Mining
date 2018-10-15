@@ -26,25 +26,25 @@ class QuestionScanSpider(scrapy.Spider):
 
     # Question_file
     main_domain=r'https://www.quora.com'
-    next_log_api=r"https://www.quora.com/webnode2/server_call_POST?_h=h0Iys3ulhTPzkz&_m=increase_count"
-    next_log_url = r"https://tch229035.tch.quora.com/up/%s/updates?&min_seq=%s&channel=%s&hash=%s&timeout=2000"
+    next_topic_api=r"https://www.quora.com/webnode2/server_call_POST?_h=jhFnvm%2FmmJ1Fza&_m=increase_count"
+    next_topic_url=r'https://tch.tch.quora.com/up/%s/updates?&min_seq=%s&channel=%s&hash=%s&timeout=2000'
+
 
     # Request parameters
-    next_log_json = '{"args":[],"kwargs":{"cid":"%s","num":20,"current":%s}}'
+    next_topic_json = '{"args":[],"kwargs":{"cid":"%s","num":18,"current":%s}}'
 
     header_request={'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0'}
 
-    next_log_load = dict(json='', revision='', formkey='', postkey='', window_id='', referring_controller='question',
-                         referring_action='log', __hmac='h0Iys3ulhTPzkz', __method='increase_count',__first_server_call='true',
-                         js_init='{"object_id":9927064,"initial_count":20,"buffer_count":20,"crawler":false,"has_more":true,"retarget_links":true,"fixed_size_paged_list":false,"auto_paged":true}')
+    next_topic_load = dict(json='', revision='', formkey='', postkey='', window_id='', referring_controller='user',
+                         referring_action='topic', __hmac='jhFnvm/mmJ1Fza', __method='increase_count',
+                         js_init='{"object_id":25595509,"initial_count":18,"buffer_count":18,"crawler":false,"has_more":true,"retarget_links":true,"fixed_size_paged_list":false,"auto_paged":true}')
 
     # Regex tool
     key_pttr = r'(?<=\"{0}\"\:\s\")[^\"]*?(?=\")'
     key_token = lambda r,x,y,k: regex.compile(k.format(x), regex.IGNORECASE).search(y).group()
     get_window_id = regex.compile(r'(?<=window_id\s\=\s\")[^\"]*?(?=\")', regex.IGNORECASE)
-    get_qid = regex.compile(r'(?<=\"qid\"\:\s).*?(?=\}\,)', regex.IGNORECASE)
-    get_cid = regex.compile(r'(?<=\")[^\"]*?(?=\"\:\s\{\"more_button\"\:)', regex.IGNORECASE)
+
     get_htmls = regex.compile(r'(?<=\\"html\\"\:\s\\").*?(?=\\"\,\s\\"css\\")', regex.IGNORECASE)
     get_min_seq = regex.compile(r'(?<=\"min\_seq\"\:).*?(?=\})', regex.IGNORECASE)
 
@@ -66,24 +66,24 @@ class QuestionScanSpider(scrapy.Spider):
 
     inc_const = 18
     init_const = 18
-    next_log_meta_keys=['cid', 'hash', 'channel', 'chan','current_sum','min_seq','main_item','next_log_load']
-    custom_settings = {
-        'ITEM_PIPELINES':{
-            'Quora_Mining.pipelines.Answers_Or_Askers':50,
-        },
-    }
+    next_topic_meta_keys=['cid', 'hash', 'channel', 'chan','current_sum','min_seq','item','next_topic_load']
+
+    # custom_settings = {
+    #     'ITEM_PIPELINES':{
+    #         'Quora_Mining.pipelines.Answers_Or_Askers':50,
+    #     },
+    # }
 
 
     # List css:
-    logs_css=r'.LogOperation.PagedListItem'
-    next_page_check=r'.pager_next.action_button:not(.hidden)'
-    question_add_check=r'.AddQ`6euestionOperationView'
+    topics_css=r'div.ObjectCard-header>div>a>span.name_text>span>.TopicName::text'
 
-    user_css_dict = {'questions': lambda response: response.css(r'.QuestionsNavItem>a>span::text').extract_first(),
+    user_css_dict = {'user':lambda response:response.css(r'.ProfileNameAndSig>h1>span>span>span::text').extract_first(),
+                     'questions': lambda response:response.css(r'.QuestionsNavItem>a>span::text').extract_first(),
                      'answers': lambda response: response.css(r'.AnswersNavItem>a>span::text').extract_first(),
                      'posts': lambda response: response.css(r'.PostsNavItem>a>span::text').extract_first(),
                      'blogs': lambda response: response.css(r'.BlogsNavItem>a>span::text').extract_first(),
-                     'shares': lambda response: response.css(r'.QuoraShareNavItem>a>span::text').extract_first()}
+                     'shares':lambda response:response.css(r'.QuoraShareNavItem >a>span::text').extract_first()}
 
     # Assign default key to most of quora body request loads
     def default_param(self,response_text,load_text):
@@ -94,27 +94,74 @@ class QuestionScanSpider(scrapy.Spider):
     # Start to parse every question in the question jsons we scraped previously
     def start_requests(self):
         for item in self.SQLITE['ANSWERS'].select_all():
-            if self.SQLITE['USERS'].select(list_label=['user_url'],des_label='user_url',source_value=item['answerer_url']):continue
-            yield scrapy.Request(url=self.main_domain+item['user_url'],callback=self.parse_user,
+            # if self.SQLITE['USERS'].select(list_label=['user_url'],des_label='user_url',source_value=item['answerer_url']):continue
+            yield scrapy.Request(url=self.main_domain+item['answerer_url'],callback=self.parse_user,
                                  headers=self.header_request,meta={'user_url':item['answerer_url'],'cookies':self.login_cookies})
 
     # Parse answer from first page of each question log
     def parse_user(self,response):
         # Default item contain user url and id info
         item=dict(user_url=response.meta['user_url'])
-        item.update({key,funct(response) for key,funct in self.user_css_dict.items()})
+        item.update({key:funct(response) for key,funct in self.user_css_dict.items()})
         yield scrapy.Request(url=response.request.url+'/topics',headers=self.header_request,
                              callback=self.parse_topics,meta={'item':item.copy()})
 
     def parse_topics(self,response):
+        item=response.meta['item']
+
+        initial_meta={'current_sum':self.init_const,
+                      'cid':self.get_cid.search(response.text).group(),
+                      'hash':self.get_log_hash.search(response.text).group(),
+                      'channel':self.get_log_channel.search(response.text).group(),
+                      'chan':self.get_log_chan.search(response.text).group(),
+                      'min_seq':0,
+                      'item':item.copy()}
+        next_topic_load = self.default_param(response.text, self.next_log_load)
+        next_topic_load['json'] = self.next_topic_json % (meta['cid'], meta['current_sum'])
+        initial_meta.update({'next_topic_load':next_topic_load})
+
+        item = self.append_topics(response,item,initial_meta)
+
+        yield scrapy.Request(url=self.next_log_api, callback=self.parse_next_topics, headers=self.header_request,
+                             body=urlencode(next_topic_load), method='POST',meta=initial_meta)
+
+    def parse_next_topics(self,response):
+
+        chan=response.meta['chan']
+        min_seq=response.meta['min_seq']
+        channel=response.meta['channel']
+        hash=response.meta['hash']
+
+        yield scrapy.Request(url=self.next_topic_url % (chan,min_seq,channel,hash),headers=self.header_request,
+                             meta={key: response.meta[key] for key in self.next_topic_meta_keys},callback=self.parse_next_topics_detail)
+
+    def parse_next_topics_detail(self,response):
+        list_html = self.get_htmls.findall(response.text)
+        item=response.meta['item']
+
+        if not list_html:
+            yield item
+        else:
+            html_selector = Selector(text='\n'.join(list_html))
+            self.parse_topics(html_selector)
+
+    def append_topics(self,html_selector,item,meta):
+
         try:
-            list_topics = response.meta['list_topics']
+            list_topics = item['topics']
         except:
             list_topics=[]
 
-        if response.css(self.topics_css).extract():
-            list_topics.append(*response.css(self.topics_css).extract())
-        else:
-            item['topics']=list_topics
-            yield item
+        item['topics'] = list_topics + html_selector.css(self.topics_css).extract()
+
+        next_meta = {key: response.meta[key] for key in self.next_log_meta_keys}
+        next_meta.update({'current_sum': next_meta['current_sum'] + self.inc_const,
+                          'min_seq': self.get_min_seq.search(response.text).group()})
+        next_log_load = response.meta['next_log_load']
+        next_log_load.update({'json': self.next_log_json % (response.meta['cid'], next_meta['current_sum'])})
+
+        yield scrapy.Request(url=self.next_log_api, callback=self.parse_next_topics, headers=self.header_request,
+                             body=urlencode(next_topic_load), method='POST', meta=meta)
+
+
 
