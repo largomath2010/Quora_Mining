@@ -66,11 +66,11 @@ class QuestionScanSpider(scrapy.Spider):
     init_const = 18
     next_topic_meta_keys=['cid', 'hash', 'channel', 'chan','current_sum','min_seq','item','next_topic_load']
 
-    # custom_settings = {
-    #     'ITEM_PIPELINES':{
-    #         'Quora_Mining.pipelines.Save_Users':50,
-    #     },
-    # }
+    custom_settings = {
+        'ITEM_PIPELINES':{
+            'Quora_Mining.pipelines.Save_Users':50,
+        },
+    }
 
     # List css:
     topics_css=r'div.ObjectCard-header>div>a>span.name_text>span>.TopicName::text'
@@ -88,15 +88,22 @@ class QuestionScanSpider(scrapy.Spider):
         load_text['window_id'] = self.get_window_id.search(response_text).group()
         return load_text
 
-    # Start to parse every question in the question jsons we scraped previously
+    # Start to parse every answerer,asker in the answers and askers db we scraped previously
     def start_requests(self):
-        # for item in self.SQLITE['ANSWERS'].select_all():
-        for item in [{'answerer_url':'/profile/Vaibhav-Singh-124'},{'answerer_url':'/profile/Adeyemi-Oluwaseun/'}]:
+        for item in self.SQLITE['ANSWERS'].select_all():
+            if not item['answerer_url']:continue
             if self.SQLITE['USERS'].select(list_label=['user_url'],des_label='user_url',source_value=item['answerer_url']):continue
             yield scrapy.Request(url=self.main_domain+item['answerer_url'],callback=self.parse_user,
                                  headers=self.header_request,meta={'user_url':item['answerer_url']},cookies=self.login_cookies)
 
-    # Parse answer from first page of each question log
+        for item in self.SQLITE['ASKERS'].select_all():
+            if not item['asker_url'] or item['asker_url']=='None':continue
+            if self.SQLITE['USERS'].select(list_label=['user_url'], des_label='user_url',source_value=item['asker_url']): continue
+            yield scrapy.Request(url=self.main_domain+item['asker_url'],callback=self.parse_user,
+                                 headers=self.header_request,meta={'user_url':item['asker_url']},cookies=self.login_cookies)
+
+
+    # Parse basic user info from
     def parse_user(self,response):
         # Default item contain user url and id info
         item=dict(user_url=response.meta['user_url'])
@@ -104,6 +111,7 @@ class QuestionScanSpider(scrapy.Spider):
         yield scrapy.Request(url=response.request.url+'/topics',headers=self.header_request,
                              callback=self.parse_topics,meta={'item':item.copy()})
 
+    # Parse topics from the first page
     def parse_topics(self,response):
         meta={'current_sum':self.init_const,
               'cid':self.get_cid.search(response.text).group(),
@@ -111,15 +119,14 @@ class QuestionScanSpider(scrapy.Spider):
               'channel':self.get_topic_channel.search(response.text).group(),
               'chan':self.get_topic_chan.search(response.text).group(),
               'min_seq':0,
-              'item':response.meta['item'].copy(),
-              'next_topic_load':self.default_param(response.text, self.next_topic_load)}
+              'item':response.meta['item'],
+              'next_topic_load':self.default_param(response.text, self.next_topic_load.copy())}
         meta['next_topic_load'].update({'json':self.next_topic_json % (meta['cid'], meta['current_sum'])})
 
         yield from self.append_topics(response,meta)
 
+    # Reassign next url parameter before passing them to the next iteration
     def parse_next_topics(self,response):
-        
-        logging.info(response.text)
 
         chan=response.meta['chan']
         min_seq=response.meta['min_seq']
@@ -129,6 +136,7 @@ class QuestionScanSpider(scrapy.Spider):
         yield scrapy.Request(url=self.next_topic_url % (chan,min_seq,channel,hash),headers=self.header_request,
                              meta={key:response.meta[key] for key in self.next_topic_meta_keys}.copy(),callback=self.parse_next_topics_detail)
 
+    # Parse topics from pagination url
     def parse_next_topics_detail(self,response):
         list_html = self.get_htmls.findall(response.text)
         item=response.meta['item']
@@ -142,9 +150,9 @@ class QuestionScanSpider(scrapy.Spider):
             meta.update({'current_sum': meta['current_sum'] + self.inc_const,
                          'min_seq': self.get_min_seq.search(response.text).group()})
             meta['next_topic_load'].update({'json': self.next_topic_json % (meta['cid'], meta['current_sum'])})
-            yield from self.append_topics(html_selector,meta.copy())
+            yield from self.append_topics(html_selector,meta)
 
-
+    # Common procedure that parse topics and yield pagination happening in both first page of topics and pagination page
     def append_topics(self,html_selector,meta):
         try:
             list_topics = meta['item']['topics']
@@ -154,7 +162,7 @@ class QuestionScanSpider(scrapy.Spider):
         meta['item']['topics'] = list_topics + html_selector.css(self.topics_css).extract()
 
         yield scrapy.Request(url=self.next_topic_api, callback=self.parse_next_topics, headers=self.header_request,
-                             body=urlencode(meta['next_topic_load']), method='POST', meta=meta)
+                             body=urlencode(meta['next_topic_load']), method='POST', meta=meta.copy())
 
 
 
