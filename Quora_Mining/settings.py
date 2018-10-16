@@ -18,7 +18,7 @@ NEWSPIDER_MODULE = 'Quora_Mining.spiders'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0'
 
-LOGIN_COOKIES={'m-b':'nhguETCq6M8NiPKHgXXZMg\075\075'}
+LOGIN_COOKIES={'m-b':"nhguETCq6M8NiPKHgXXZMg\075\075"}
 # DEFAULT_REQUEST_HEADERS = {
 #     'X-Crawlera-Max-Retries': 2,
 #     'X-Crawlera-Use-Https':1,
@@ -28,6 +28,7 @@ DB_PATH='quora.db'
 QUESTIONS='quora_question'
 ANSWERS='quora_answers'
 ASKERS='quora_askers'
+USERS='quora_users'
 SCAN_DURATION=30
 
 
@@ -40,7 +41,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY =.1
+DOWNLOAD_DELAY =.05
 # The download delay setting will honor only one of:
 CONCURRENT_REQUESTS_PER_DOMAIN = 10
 #CONCURRENT_REQUESTS_PER_IP = 16

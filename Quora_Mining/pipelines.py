@@ -29,3 +29,12 @@ class Question_To_Csv(object):
     def process_item(self, item, spider):
         self.questions.insert(item=item)
         return item
+
+class Save_Users(object):
+    settings = get_project_settings()
+    db_path = settings.get('DB_PATH')
+    users = SQL(db_path=db_path, db_table=settings.get('USERS'))
+
+    def process_item(self, item, spider):
+        self.users.insert(item=item)
+        return item
