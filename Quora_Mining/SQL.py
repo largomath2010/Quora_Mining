@@ -7,7 +7,7 @@ class SQL:
     fields_name_querry='pragma table_info({0})'
     select_querry = 'select {0} from {1} where {2}="{3}";'
     update_querry='UPDATE {0} SET {1} WHERE {2} = "{3}";'
-    insert_querry='insert into {0} ({1}) values ({2});'
+    insert_querry='insert or replace into {0}({1}) values ({2});'
     set_querry='{0}="{1}"'
     def __init__(self,**kwargs):
         self.db_path=kwargs['db_path']
@@ -58,20 +58,29 @@ class SQL:
         try:
             self.__insert_data(item)
             self.db_pool.commit()
-            logging.info('Successfully insert: ' + str(item))
+            logging.info('Successfully inserted new items!')
             return True
         except Exception as err:
-            Error_Text = str(err) + ' while trying to commit item: ' + str(item) + '\n'
-            logging.warn(Error_Text)
-            open(self.fail_path, 'a+').write(Error_Text)
+            logging.warn(str(err))
+            open(self.fail_path, 'a+').write(str(err)+'\n')
             return False
 
     def __insert_data(self, item):
-        labels = r','.join(item.keys())
-        data=[str(value) for value in item.values()]
-        qm = r','.join([r'?'] * len(data))
+        if type(item)==dict:
+            labels = r','.join(item.keys())
+            data = [str(value) for value in item.values()]
+            qm = r','.join([r'?'] * len(data))
+        elif type(item)==list:
+            labels = r','.join(item[0].keys())
+            data = [tuple(it.values()) for it in item]
+            qm = r','.join([r'?'] * len(item[0].values()))
+
         querry = self.insert_querry.format(self.db_table, labels, qm)
-        self.cursor.execute(querry, data)
+
+        if type(item)==dict:
+            self.cursor.execute(querry, data)
+        elif type(item)==list:
+            self.cursor.executemany(querry,data)
 
 if __name__=='__main__':
     print('Succesfully import')
