@@ -60,17 +60,18 @@ class QuestionScanSpider(scrapy.Spider):
     SQLITE={'QUESTIONS':SQL(db_path=db_path, db_table=settings.get('QUESTIONS')),
             'ANSWERS':SQL(db_path=db_path, db_table=settings.get('ANSWERS')),
             'ASKERS':SQL(db_path=db_path, db_table=settings.get('ASKERS')),
-            'USERS':SQL(db_path=db_path, db_table=settings.get('USERS'))}
+            'FOLLOWERS':SQL(db_path=db_path, db_table=settings.get('FOLLOWERS'))
+            }
 
     inc_const = 18
     init_const = 18
     next_meta_keys=['cid', 'hash', 'channel', 'chan','current_sum','min_seq','item','next_follow_load']
 
-    # custom_settings = {
-    #     'ITEM_PIPELINES':{
-    #         'Quora_Mining.pipelines.Save_Users':50,
-    #     },
-    # }
+    custom_settings = {
+        'ITEM_PIPELINES':{
+            'Quora_Mining.pipelines.Save_Followers':50,
+        },
+    }
 
     # List css:
     follower_css=r'.ObjectCard-header>span>span>a'
@@ -86,18 +87,17 @@ class QuestionScanSpider(scrapy.Spider):
 
     # Start to parse every answerer,asker in the answers and askers db we scraped previously
     def start_requests(self):
-        # for item in self.SQLITE['ANSWERS'].select_all():
-        for item in [{'answerer_url':'/profile/Alex-Saint-5'},{'answerer_url':'/profile/Glenn-Girona'}]:
+        for item in self.SQLITE['ANSWERS'].select_all():
             if not item['answerer_url']:continue
-            # if self.SQLITE['USERS'].select(list_label=['user_url'],des_label='user_url',source_value=item['answerer_url']):continue
+            if self.SQLITE['FOLLOWERS'].select(list_label=['user_url'],des_label='user_url',source_value=item['answerer_url']):continue
             yield scrapy.Request(url=self.main_domain+item['answerer_url']+'/followers',callback=self.parse_followers,
                                  headers=self.header_request,meta={'user_url':item['answerer_url']},cookies=self.login_cookies)
-        #
-        # for item in self.SQLITE['ASKERS'].select_all():
-        #     # if not item['asker_url'] or item['asker_url']=='None':continue
-        #     # if self.SQLITE['USERS'].select(list_label=['user_url'], des_label='user_url',source_value=item['asker_url']): continue
-        #     yield scrapy.Request(url=self.main_domain+item['asker_url']+'/followers',callback=self.parse_followers,
-        #                          headers=self.header_request,meta={'user_url':item['asker_url']},cookies=self.login_cookies)
+
+        for item in self.SQLITE['ASKERS'].select_all():
+            if not item['asker_url'] or item['asker_url']=='None':continue
+            if self.SQLITE['FOLLOWERS'].select(list_label=['user_url'], des_label='user_url',source_value=item['asker_url']): continue
+            yield scrapy.Request(url=self.main_domain+item['asker_url']+'/followers',callback=self.parse_followers,
+                                 headers=self.header_request,meta={'user_url':item['asker_url']},cookies=self.login_cookies)
 
     # Parse topics from the first page
     def parse_followers(self,response):

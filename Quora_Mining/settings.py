@@ -29,6 +29,7 @@ QUESTIONS='quora_question'
 ANSWERS='quora_answers'
 ASKERS='quora_askers'
 USERS='quora_users'
+FOLLOWERS='quora_followers'
 SCAN_DURATION=30
 
 
