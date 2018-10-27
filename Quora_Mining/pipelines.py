@@ -52,3 +52,18 @@ class Save_Followers(object):
 
         self.followers.insert(item=item)
         return item
+
+
+class Save_Following(object):
+    settings = get_project_settings()
+    db_path = settings.get('DB_PATH')
+    following = SQL(db_path=db_path, db_table=settings.get('FOLLOWING'))
+
+    def process_item(self, item, spider):
+        try:
+            item['id']=item['user_url']+item['following_url']
+        except:
+            pass
+
+        self.following.insert(item=item)
+        return item

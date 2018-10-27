@@ -30,6 +30,7 @@ ANSWERS='quora_answers'
 ASKERS='quora_askers'
 USERS='quora_users'
 FOLLOWERS='quora_followers'
+FOLLOWERS='quora_following'
 SCAN_DURATION=30
 
 
