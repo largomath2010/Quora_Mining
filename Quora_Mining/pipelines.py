@@ -67,3 +67,12 @@ class Save_Following(object):
 
         self.following.insert(item=item)
         return item
+
+class Save_Activities(object):
+    settings = get_project_settings()
+    db_path = settings.get('DB_PATH')
+    activities = SQL(db_path=db_path, db_table=settings.get('ACTIVITIES'))
+
+    def process_item(self, item, spider):
+        self.activities.insert(item=item)
+        return item
