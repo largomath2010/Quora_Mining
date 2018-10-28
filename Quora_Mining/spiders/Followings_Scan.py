@@ -60,7 +60,7 @@ class QuestionScanSpider(scrapy.Spider):
     SQLITE={'QUESTIONS':SQL(db_path=db_path, db_table=settings.get('QUESTIONS')),
             'ANSWERS':SQL(db_path=db_path, db_table=settings.get('ANSWERS')),
             'ASKERS':SQL(db_path=db_path, db_table=settings.get('ASKERS')),
-            'FOLLOWERS':SQL(db_path=db_path, db_table=settings.get('FOLLOWERS'))
+            'FOLLOWING':SQL(db_path=db_path, db_table=settings.get('FOLLOWERS'))
             }
 
     inc_const = 18
