@@ -57,11 +57,6 @@ class QuestionScanSpider(scrapy.Spider):
     settings = get_project_settings()
     db_path=settings.get('DB_PATH')
     login_cookies=settings.get('LOGIN_COOKIES')
-    SQLITE={'QUESTIONS':SQL(db_path=db_path, db_table=settings.get('QUESTIONS')),
-            'ANSWERS':SQL(db_path=db_path, db_table=settings.get('ANSWERS')),
-            'ASKERS':SQL(db_path=db_path, db_table=settings.get('ASKERS')),
-            'FOLLOWERS':SQL(db_path=db_path, db_table=settings.get('FOLLOWERS'))
-            }
 
     inc_const = 18
     init_const = 18
@@ -69,7 +64,7 @@ class QuestionScanSpider(scrapy.Spider):
 
     custom_settings = {
         'ITEM_PIPELINES':{
-            'Quora_Mining.pipelines.Save_Followers':50,
+            'Quora_Mining.pipelines.Save_Network':50,
         },
     }
 
@@ -87,17 +82,16 @@ class QuestionScanSpider(scrapy.Spider):
 
     # Start to parse every answerer,asker in the answers and askers db we scraped previously
     def start_requests(self):
-        for item in self.SQLITE['ANSWERS'].select_all():
-            if not item['answerer_url']:continue
-            if self.SQLITE['FOLLOWERS'].select(list_label=['user_url'],des_label='user_url',source_value=item['answerer_url']):continue
-            yield scrapy.Request(url=self.main_domain+item['answerer_url']+'/followers',callback=self.parse_followers,
-                                 headers=self.header_request,meta={'user_url':item['answerer_url']},cookies=self.login_cookies)
+        self.LIST_URLS = {'USERS': [item['user_url'] for item in SQL(db_path=self.db_path, db_table=self.settings.get('USERS')).select_all()],
+                          'FOLLOWERS': [item['user_url'] for item in SQL(db_path=self.db_path, db_table=self.settings.get('USERS')).select_all()]}
 
-        for item in self.SQLITE['ASKERS'].select_all():
-            if not item['asker_url'] or item['asker_url']=='None':continue
-            if self.SQLITE['FOLLOWERS'].select(list_label=['user_url'], des_label='user_url',source_value=item['asker_url']): continue
-            yield scrapy.Request(url=self.main_domain+item['asker_url']+'/followers',callback=self.parse_followers,
-                                 headers=self.header_request,meta={'user_url':item['asker_url']},cookies=self.login_cookies)
+        for user in self.LIST_URLS['USERS']:
+            if not user or user=='None':continue
+            if user in self.LIST_URLS['FOLLOWERS']:
+                logging.info(user+' Has already been processed!')
+                continue
+            yield scrapy.Request(url=self.main_domain+user+'/followers',callback=self.parse_followers,
+                                 headers=self.header_request,meta={'user_url':user},cookies=self.login_cookies)
 
     # Parse topics from the first page
     def parse_followers(self,response):

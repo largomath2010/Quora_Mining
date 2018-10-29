@@ -34,7 +34,6 @@ FOLLOWING='quora_following'
 ACTIVITIES='quora_activities'
 SCAN_DURATION=30
 
-
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
