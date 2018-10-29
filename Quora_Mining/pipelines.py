@@ -39,40 +39,21 @@ class Save_Users(object):
         self.users.insert(item=item)
         return item
 
-class Save_Followers(object):
+class Save_Network(object):
     settings = get_project_settings()
     db_path = settings.get('DB_PATH')
-    followers = SQL(db_path=db_path, db_table=settings.get('FOLLOWERS'))
+    network = {'Followers_Scan':SQL(db_path=db_path, db_table=settings.get('FOLLOWERS')),
+               'Following_Scan':SQL(db_path=db_path, db_table=settings.get('FOLLOWING')),
+               'Activity_Scan':SQL(db_path=db_path, db_table=settings.get('ACTIVITIES')),
+               }
 
     def process_item(self, item, spider):
         try:
-            item['id']=item['user_url']+item['follower_url']
-        except:
-            pass
+            if spider.name=='Followers_Scan':
+                item['id']=item['user_url']+item['follower_url']
+            elif spider.name=='Following_Scan':
+                item['id']=item['user_url']+item['following_url']
+        except:pass
 
-        self.followers.insert(item=item)
-        return item
-
-
-class Save_Following(object):
-    settings = get_project_settings()
-    db_path = settings.get('DB_PATH')
-    following = SQL(db_path=db_path, db_table=settings.get('FOLLOWING'))
-
-    def process_item(self, item, spider):
-        try:
-            item['id']=item['user_url']+item['following_url']
-        except:
-            pass
-
-        self.following.insert(item=item)
-        return item
-
-class Save_Activities(object):
-    settings = get_project_settings()
-    db_path = settings.get('DB_PATH')
-    activities = SQL(db_path=db_path, db_table=settings.get('ACTIVITIES'))
-
-    def process_item(self, item, spider):
-        self.activities.insert(item=item)
+        self.network[spider.name].insert(item=item)
         return item
