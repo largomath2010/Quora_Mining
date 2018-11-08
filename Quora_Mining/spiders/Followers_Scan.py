@@ -83,7 +83,7 @@ class QuestionScanSpider(scrapy.Spider):
     # Start to parse every answerer,asker in the answers and askers db we scraped previously
     def start_requests(self):
         self.LIST_URLS = {'USERS': [item['user_url'] for item in SQL(db_path=self.db_path, db_table=self.settings.get('USERS')).select_all()],
-                          'FOLLOWERS': [item['user_url'] for item in SQL(db_path=self.db_path, db_table=self.settings.get('USERS')).select_all()]}
+                          'FOLLOWERS': [item['user_url'] for item in SQL(db_path=self.db_path, db_table=self.settings.get('FOLLOWERS')).select_all()]}
 
         for user in self.LIST_URLS['USERS']:
             if not user or user=='None':continue
