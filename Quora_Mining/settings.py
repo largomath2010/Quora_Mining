@@ -32,7 +32,9 @@ USERS='quora_users'
 FOLLOWERS='quora_followers'
 FOLLOWING='quora_following'
 ACTIVITIES='quora_activities'
+
 SCAN_DURATION=30
+SAVE_CHUNK=20
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False

@@ -42,10 +42,20 @@ class Save_Users(object):
 class Save_Network(object):
     settings = get_project_settings()
     db_path = settings.get('DB_PATH')
+    save_chunk=settings.get('SAVE_CHUNK')
+    archives=[]
+
     network = {'Followers_Scan':SQL(db_path=db_path, db_table=settings.get('FOLLOWERS')),
                'Following_Scan':SQL(db_path=db_path, db_table=settings.get('FOLLOWING')),
                'Activity_Scan':SQL(db_path=db_path, db_table=settings.get('ACTIVITIES')),
                }
+
+    def __init__(self):
+        dispatcher.connect(self.spider_closed, spider_closed)
+
+    def spider_closed(self,spider):
+        if self.archives:
+            self.network[spider.name].insert(item=self.archives)
 
     def process_item(self, item, spider):
         try:
@@ -55,5 +65,9 @@ class Save_Network(object):
                 item['id']=item['user_url']+item['following_url']
         except:pass
 
-        self.network[spider.name].insert(item=item)
+        self.archives.append(item)
+        if len(self.archives)==self.save_chunk:
+            self.network[spider.name].insert(item=self.archives)
+            self.archives=[]
+
         return item
