@@ -94,7 +94,7 @@ class QuestionScanSpider(scrapy.Spider):
                 logging.info(user + ' Has already been processed!')
                 continue
             yield scrapy.Request(url=self.main_domain+user+'/log',callback=self.parse_followers,
-                                 headers=self.header_request,meta={'user_url':user},cookies=self.login_cookies)
+                                 headers=self.header_request,meta={'user_url':user},cookies=self.login_cookies[int(self.server)-1])
 
     # Parse topics from the first page
     def parse_followers(self,response):

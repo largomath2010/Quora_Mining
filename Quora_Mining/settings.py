@@ -18,7 +18,16 @@ NEWSPIDER_MODULE = 'Quora_Mining.spiders'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0'
 
-LOGIN_COOKIES={'m-b':"nhguETCq6M8NiPKHgXXZMg\075\075"}
+LOGIN_COOKIES=[
+    {'m-b':r"nhguETCq6M8NiPKHgXXZMg\075\075"},
+    {'m-b':r"XwYnlAAXVd7Lc3sG98ZUBw\075\075"},
+    {'m-b':r"r4we59LdN8bGGKVXlnt8Qg\075\075"},
+    {'m-b':r"G4CB7qAWA_3CZK1keT3flA\075\075"},
+    {'m-b':r"IST-n6b4n8R7ycM2AimwjA\075\075"},
+    {'m-b':r"0tzh9Ie7-FOkOzUIIk37aA\075\075"},
+    {'m-b':r"S-bym4PQ2Bc6mbz0xPxcDA\075\075"},
+]
+
 # DEFAULT_REQUEST_HEADERS = {
 #     'X-Crawlera-Max-Retries': 2,
 #     'X-Crawlera-Use-Https':1,
