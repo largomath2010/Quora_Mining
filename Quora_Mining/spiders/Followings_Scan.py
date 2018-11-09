@@ -95,16 +95,19 @@ class QuestionScanSpider(scrapy.Spider):
 
     # Parse topics from the first page
     def parse_followers(self,response):
-        meta={'current_sum':self.init_const,
-              'cid':self.get_cid.search(response.text).group(),
-              'hash':self.get_hash.search(response.text).group(),
-              'channel':self.get_channel.search(response.text).group(),
-              'chan':self.get_chan.search(response.text).group(),
-              'min_seq':0,
-              'item':{'user_url':response.meta['user_url']},
-              'next_follow_load':self.default_param(response.text, self.next_follow_load.copy())}
-        meta['next_follow_load'].update({'json':self.next_follow_json % (meta['cid'], meta['current_sum'])})
-        yield from self.append_following(response,meta)
+        try:
+            meta={'current_sum':self.init_const,
+                  'cid':self.get_cid.search(response.text).group(),
+                  'hash':self.get_hash.search(response.text).group(),
+                  'channel':self.get_channel.search(response.text).group(),
+                  'chan':self.get_chan.search(response.text).group(),
+                  'min_seq':0,
+                  'item':{'user_url':response.meta['user_url']},
+                  'next_follow_load':self.default_param(response.text, self.next_follow_load.copy())}
+            meta['next_follow_load'].update({'json':self.next_follow_json % (meta['cid'], meta['current_sum'])})
+            yield from self.append_following(response,meta)
+        except:
+            logging.info('No followings!')
 
     # Reassign next url parameter before passing them to the next iteration
     def parse_next_following(self,response):
