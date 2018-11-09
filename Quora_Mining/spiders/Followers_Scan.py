@@ -143,9 +143,11 @@ class QuestionScanSpider(scrapy.Spider):
             item=meta['item'].copy()
             item.update({key:funct(Selector(text=follower)) for key,funct in self.follower_css_dict.items()})
             yield item
-
-        yield scrapy.Request(url=self.next_follow_api, callback=self.parse_next_followers, headers=self.header_request,
-                             body=urlencode(meta['next_follow_load']), method='POST', meta=meta.copy())
+        if len(list_followers) == self.init_const:
+            yield scrapy.Request(url=self.next_follow_api, callback=self.parse_next_followers, headers=self.header_request,
+                                 body=urlencode(meta['next_follow_load']), method='POST', meta=meta.copy())
+        else:
+            logging.info('No next page!')
 
 
 

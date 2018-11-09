@@ -105,9 +105,10 @@ class QuestionScanSpider(scrapy.Spider):
                   'item':{'user_url':response.meta['user_url']},
                   'next_follow_load':self.default_param(response.text, self.next_follow_load.copy())}
             meta['next_follow_load'].update({'json':self.next_follow_json % (meta['cid'], meta['current_sum'])})
-            yield from self.append_following(response,meta)
-        except:
+            yield from self.append_following(response, meta)
+        except :
             logging.info('No followings!')
+            return
 
     # Reassign next url parameter before passing them to the next iteration
     def parse_next_following(self,response):
@@ -144,8 +145,11 @@ class QuestionScanSpider(scrapy.Spider):
             item.update({key:funct(Selector(text=following)) for key,funct in self.following_css_dict.items()})
             yield item
 
-        yield scrapy.Request(url=self.next_follow_api, callback=self.parse_next_following, headers=self.header_request,
-                             body=urlencode(meta['next_follow_load']), method='POST', meta=meta.copy())
+        if len(list_followings)==self.init_const:
+            yield scrapy.Request(url=self.next_follow_api, callback=self.parse_next_following, headers=self.header_request,
+                                 body=urlencode(meta['next_follow_load']), method='POST', meta=meta.copy())
+        else:
+            logging.info('No next page!')
 
 
 
