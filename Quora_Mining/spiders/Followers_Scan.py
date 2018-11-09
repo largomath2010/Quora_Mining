@@ -87,7 +87,7 @@ class QuestionScanSpider(scrapy.Spider):
 
         for user in self.LIST_URLS['USERS']:
             if not user or user=='None':continue
-            if user in self.LIST_URLS['FOLLOWERS']:
+            if user in self.LIST_URLS['FOLLOWERS'] and self.LIST_URLS['FOLLOWERS'].count(user)<self.init_const:
                 logging.info(user+' Has already been processed!')
                 continue
             yield scrapy.Request(url=self.main_domain+user+'/followers',callback=self.parse_followers,
