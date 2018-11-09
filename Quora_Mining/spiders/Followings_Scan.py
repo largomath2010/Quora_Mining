@@ -26,7 +26,7 @@ class QuestionScanSpider(scrapy.Spider):
 
     # Question_file
     main_domain=r'https://www.quora.com'
-    next_follow_api=r"https://www.quora.com/webnode2/server_call_POST?_h=h6ZkAQHNIyPp%2FO&_m=increase_count"
+    next_follow_api=r"https://www.quora.com/webnode2/server_call_POST?_h=h6ZkAQHNIyPp/O&_m=increase_count"
     next_follow_url=r'https://tch.tch.quora.com/up/%s/updates?&min_seq=%s&channel=%s&hash=%s&timeout=2000'
 
 
@@ -38,7 +38,7 @@ class QuestionScanSpider(scrapy.Spider):
 
     next_follow_load = dict(json='', revision='', formkey='', postkey='', window_id='', referring_controller='user',
                          referring_action='following', __hmac='h6ZkAQHNIyPp/O', __method='increase_count',
-                         js_init='{"object_id":54473445,"initial_count":18,"buffer_count":18,"crawler":false,"has_more":true,"retarget_links":true,"fixed_size_paged_list":false,"auto_paged":true}')
+                         js_init='{"object_id":58741273,"initial_count":18,"buffer_count":18,"crawler":false,"has_more":true,"retarget_links":true,"fixed_size_paged_list":false,"auto_paged":true}')
 
     # Regex tool
     key_pttr = r'(?<=\"{0}\"\:\s\")[^\"]*?(?=\")'
@@ -87,7 +87,8 @@ class QuestionScanSpider(scrapy.Spider):
 
         for user in self.LIST_URLS['USERS']:
             if not user or user=='None':continue
-            if user in self.LIST_URLS['FOLLOWING']:
+            if user not in self.LIST_URLS['FOLLOWING']:continue
+            if user in self.LIST_URLS['FOLLOWING'] and self.LIST_URLS['FOLLOWING'].count(user)<self.init_const:
                 logging.info(user + ' Has already been processed!')
                 continue
             yield scrapy.Request(url=self.main_domain+user+'/following',callback=self.parse_followers,

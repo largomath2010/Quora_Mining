@@ -19,12 +19,13 @@ NEWSPIDER_MODULE = 'Quora_Mining.spiders'
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0'
 
 LOGIN_COOKIES=[
-    {'m-b':r"S-bym4PQ2Bc6mbz0xPxcDA\075\075"},
-    {'m-b':r"XwYnlAAXVd7Lc3sG98ZUBw\075\075"},
-    {'m-b':r"r4we59LdN8bGGKVXlnt8Qg\075\075"},
-    {'m-b':r"G4CB7qAWA_3CZK1keT3flA\075\075"},
-    {'m-b':r"IST-n6b4n8R7ycM2AimwjA\075\075"},
+    {'m-b':r"EdihTFBt1w2rVx1SBYpR1g\075\075"},
+    {'m-b':r"OLn6zuBGkuzRhAGdMhtXmA\075\075"},
+    {'m-b':r"hM0hm9KoiJhItu9xpyvHjA\075\075"},
+    {'m-b':r"s-6O1dS5fgJ1g7q7_9_tWQ\075\075"},
+    {'m-b':r"mcX0YRGarn4MHEH4OekcaA\075\075"},
     {'m-b':r"0tzh9Ie7-FOkOzUIIk37aA\075\075"},
+    {'m-b':r"12IiXIq4xQ3UKKeBtawkOw\075\075"},
 ]
 
 
@@ -49,7 +50,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY =.5
+DOWNLOAD_DELAY =.4
 # The download delay setting will honor only one of:
 CONCURRENT_REQUESTS_PER_DOMAIN = 10
 #CONCURRENT_REQUESTS_PER_IP = 16
