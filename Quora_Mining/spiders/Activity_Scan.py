@@ -26,41 +26,34 @@ class QuestionScanSpider(scrapy.Spider):
 
     # Question_file
     main_domain=r'https://www.quora.com'
-    next_follow_api=r"https://www.quora.com/webnode2/server_call_POST?_h=2jeqFNULNIPABB&_m=increase_count"
-    next_follow_url=r'https://tch.tch.quora.com/up/%s/updates?&min_seq=%s&channel=%s&hash=%s&timeout=2000'
-
+    next_follow_api = r"https://www.quora.com/webnode2/server_call_POST?_h=2jeqFNULNIPABB&_m=update_list"
 
     # Request parameters
-    next_follow_json = '{"args":[],"kwargs":{"cid":"%s","num":20,"current":%s}}'
+    next_follow_js = '{"hashes":%s,"has_more":true,"extra_data":{},"serialized_component":"%s","not_auto_paged":false,"auto_paged":true,"enable_mobile_hide_content":false,"auto_paged_offset":800,"loading_text":"Loading...","error_text":"Connection+Error.+Please+refresh+the+page.","aggressively_load_2nd_page":false}'
+    next_follow_json = '{"args":[],"kwargs":{"paged_list_parent_cid":"wZbPomFd17","filter_hashes":%s,"extra_data":{},"force_cid":"wZbPomFd34","new_page":true}}'
 
-    header_request={'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0'}
+    header_request = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0'}
 
     next_follow_load = dict(json='', revision='', formkey='', postkey='', window_id='', referring_controller='user',
-                         referring_action='log', __hmac='2jeqFNULNIPABB', __method='increase_count',
-                         js_init='{"object_id":27133692,"initial_count":20,"buffer_count":20,"crawler":false,"has_more":true,"retarget_links":true,"fixed_size_paged_list":false,"auto_paged":true}')
+                            referring_action='log', __hmac='2jeqFNULNIPABB', __method='update_list',
+                            js_init='', __metadata='{}')
 
     # Regex tool
     key_pttr = r'(?<=\"{0}\"\:\s\")[^\"]*?(?=\")'
     key_token = lambda r,x,y,k: regex.compile(k.format(x), regex.IGNORECASE).search(y).group()
     get_window_id = regex.compile(r'(?<=window_id\s\=\s\")[^\"]*?(?=\")', regex.IGNORECASE)
 
-    get_cid = regex.compile(r'(?<=\")[^\"]*?(?=\"\:\s\{\"more_button\"\:)', regex.IGNORECASE)
-    get_htmls = regex.compile(r'(?<=\\"html\\"\:\s\\").*?(?=\\"\,\s\\"css\\")', regex.IGNORECASE)
-    get_min_seq = regex.compile(r'(?<=\"min\_seq\"\:).*?(?=\})', regex.IGNORECASE)
-
-    get_chan = regex.compile(r'(?<=\")chan[^\"]*?(?=\"\,\s\")', regex.IGNORECASE)
-    get_hash = regex.compile(r'(?<=\"channelHash\"\:\s\")[^\"]*?(?=\")', regex.IGNORECASE)
-    get_channel = regex.compile(r'(?<=\"channel\"\:\s\")[^\"]*?(?=\")', regex.IGNORECASE)
+    get_hash = regex.compile(r'(?<=\"hashes\"\:\s)[^\]]*?\](?=\,\s\"has\_more\"\:\strue\,\s\"extra\_data)',regex.IGNORECASE)
+    get_serial = regex.compile(r'(?<=\"serialized\_component\"\:\s\")[^\"]*?(?=\"\,\s\"not\_auto\_paged)',regex.IGNORECASE)
 
     # Other tools
     settings = get_project_settings()
     db_path=settings.get('DB_PATH')
     login_cookies=settings.get('LOGIN_COOKIES')
 
-    inc_const = 20
     init_const = 20
-    next_meta_keys=['cid', 'hash', 'channel', 'chan','current_sum','min_seq','item','next_follow_load']
+    next_meta_keys = ['hash', 'serial', 'item', 'next_follow_load']
 
     custom_settings = {
         'ITEM_PIPELINES':{
@@ -90,7 +83,7 @@ class QuestionScanSpider(scrapy.Spider):
 
         for user in self.LIST_URLS['USERS']:
             if not user or user=='None':continue
-            if user in self.LIST_URLS['ACTIVITIES']:
+            if user in self.LIST_URLS['ACTIVITIES'] and self.LIST_URLS['ACTIVITIES'].count(user)<self.init_const:
                 logging.info(user + ' Has already been processed!')
                 continue
             yield scrapy.Request(url=self.main_domain+user+'/log',callback=self.parse_followers,
@@ -98,42 +91,37 @@ class QuestionScanSpider(scrapy.Spider):
 
     # Parse topics from the first page
     def parse_followers(self,response):
+        meta = {'item': {'user_url': response.meta['user_url']}}
+
         try:
-            meta={'current_sum':self.init_const,
-                  'cid':self.get_cid.search(response.text).group(),
-                  'hash':self.get_hash.search(response.text).group(),
-                  'channel':self.get_channel.search(response.text).group(),
-                  'chan':self.get_chan.search(response.text).group(),
-                  'min_seq':0,
-                  'item':{'user_url':response.meta['user_url']},
-                  'next_follow_load':self.default_param(response.text, self.next_follow_load.copy())}
-            meta['next_follow_load'].update({'json':self.next_follow_json % (meta['cid'], meta['current_sum'])})
-            yield from self.append_following(response,meta)
+            meta.update({'hash': json.loads(self.get_hash.search(response.text).group()),
+                         'serial': self.get_serial.search(response.text).group(),
+                         'next_follow_load': self.default_param(response.text, self.next_follow_load.copy())})
+
+            meta['next_follow_load'].update({'json': self.next_follow_json % json.dumps(meta['hash']),
+                                             'js_init': self.next_follow_js % (json.dumps(meta['hash']), meta['serial'])})
+
         except:
-            logging.info('No activities!')
-    # Reassign next url parameter before passing them to the next iteration
-    def parse_next_following(self,response):
+            pass
 
-        chan=response.meta['chan']
-        min_seq=response.meta['min_seq']
-        channel=response.meta['channel']
-        hash=response.meta['hash']
-
-        yield scrapy.Request(url=self.next_follow_url % (chan,min_seq,channel,hash),headers=self.header_request,
-                             meta={key:response.meta[key] for key in self.next_meta_keys}.copy(),callback=self.parse_next_following_detail)
+        finally:
+            yield from self.append_following(response, meta)
 
     # Parse topics from pagination url
-    def parse_next_following_detail(self,response):
-        list_html = self.get_htmls.findall(response.text)
+    def parse_next_followers(self,response):
+        json_data=json.loads(response.text)
 
-        if not list_html:
+        try:
+            html_selector = Selector(text=json_data['value']['html'])
+        except:
             return
 
-        html_selector = Selector(text='\n'.join(list_html))
         meta = {key: response.meta[key] for key in self.next_meta_keys}
-        meta.update({'current_sum': meta['current_sum'] + self.inc_const,
-                     'min_seq': self.get_min_seq.search(response.text).group()})
-        meta['next_follow_load'].update({'json': self.next_follow_json % (meta['cid'], meta['current_sum'])})
+
+        meta['hash']=meta['hash']+json_data['value']['hashes']
+
+        meta['next_follow_load'].update({'json': self.next_follow_json % json.dumps(meta['hash']),
+                                         'js_init':self.next_follow_js % (json.dumps(meta['hash']),meta['serial'])})
 
         yield from self.append_following(html_selector,meta)
 
@@ -145,8 +133,12 @@ class QuestionScanSpider(scrapy.Spider):
             item=meta['item'].copy()
             item.update({key:funct(Selector(text=activity)) for key,funct in self.activities_css_dict.items()})
             yield item
+
         if len(list_activities) == self.init_const:
-            yield scrapy.Request(url=self.next_follow_api, callback=self.parse_next_following, headers=self.header_request,
+            if 'next_follow_load' not in meta.keys():
+                logging.info('No next page!')
+                return
+            yield scrapy.Request(url=self.next_follow_api, callback=self.parse_next_followers, headers=self.header_request,
                                  body=urlencode(meta['next_follow_load']), method='POST', meta=meta.copy())
         else:
             logging.info('No next page!')
