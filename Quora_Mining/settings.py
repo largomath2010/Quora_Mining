@@ -19,21 +19,21 @@ NEWSPIDER_MODULE = 'Quora_Mining.spiders'
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0'
 
 LOGIN_COOKIES=[
-    {'m-b':r"EdihTFBt1w2rVx1SBYpR1g\075\075"},
-    {'m-b':r"OLn6zuBGkuzRhAGdMhtXmA\075\075"},
-    {'m-b':r"hM0hm9KoiJhItu9xpyvHjA\075\075"},
-    {'m-b':r"s-6O1dS5fgJ1g7q7_9_tWQ\075\075"},
-    {'m-b':r"mcX0YRGarn4MHEH4OekcaA\075\075"},
-    {'m-b':r"0tzh9Ie7-FOkOzUIIk37aA\075\075"},
-    {'m-b':r"12IiXIq4xQ3UKKeBtawkOw\075\075"},
-    {'m-b':r"bleHFdp4kEghQKbvUpO6ow\075\075"},
-    {'m-b':r"PU3nTaAX3epsc02w3U9P3g\075\075"},
-    {'m-b':r"DUUK9JJhzuUEnXjknu6FPQ\075\075"},
-    {'m-b':r"2VQqPtwbiCXgjpH6RXjdPw\075\075"},
-    {'m-b':r"qp0MGbJIavALmk1WtwvhIg\075\075"},
-    {'m-b':r"zkWYcT5Y_HKFp_Rw3Ksgiw\075\075"},
-    {'m-b':r"efx2hkAML3__1ZTbE1WlTg\075\075"},
-    {'m-b':r"8rvJ53X4FPfJGQAt6f4eLA\075\075"},
+    {'m-b':r"iBseHETIeWDk-udIIu9umw\075\075"},
+    {'m-b':r"OTIfPF70c2_AGZ9eJT6ckQ\075\075"},
+    {'m-b':r"ryUIPeZE6G5VHVs6ls7s2A\075\075"},
+    {'m-b':r"d9GTkUZC6sJi7a-SwbuTSQ\075\075"},
+    {'m-b':r"lsEHdJIjChgjOEeLqnBUXw\075\075"},
+    {'m-b':r"GuCE5CGZLNGa78aUzkUeBw\075\075"},
+    {'m-b':r"sFuZtp5UmLuCmc2l6WJ4Vw\075\075"},
+    {'m-b':r"l-ELc8IykONs03_tBLbf_A\075\075"},
+    {'m-b':r"e4YTAVoZVCp-YVyOnGV2bA\075\075"},
+    {'m-b':r"nX7acIDuebM058qew7_6JQ\075\075"},
+    {'m-b':r"7joeT_N4wnvAXerxrTSleA\075\075"},
+    {'m-b':r"pmpJOr1uqU3f1ip36JGjYQ\075\075"},
+    {'m-b':r"N4_aMiO8-cGDPck4YSvxVA\075\075"},
+    {'m-b':r"1-ul2UIT13o0Dy-VHEWlFw\075\075"},
+    {'m-b':r"OsbhFpeTOCIIPgdSqh6T9g\075\075"},
 ]
 
 
