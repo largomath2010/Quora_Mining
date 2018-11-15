@@ -202,6 +202,7 @@ class QuestionScanSpider(scrapy.Spider):
             item.update({key:funct(Selector(text=activity)) for key,funct in self.activities_css_dict.items()})
             if item['timestamp']>=self.last_check:
                 inbound_timestamp.append(item['timestamp'])
+                item['timestamp']=item['timestamp'].strftime('%Y-%m-%d')
                 yield item
 
         if not inbound_timestamp:
